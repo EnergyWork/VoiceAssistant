@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Голосовой помощник</string>
+    <string name="questionField">Задайте вопрос</string>
+    <string name="sendButton">Отправить</string>
+    <string name="user">Пользователь</string>
+    <string name="UserImageDesc">Что-то</string>
+    <string name="assistantName">Ассистент</string>
+</resources>
