@@ -27,6 +27,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+
 class AI {
     public static Map<String, String> phrases = new HashMap<String, String>() {{
         put("привет", "Привет!");
@@ -78,15 +82,21 @@ class AI {
         n = (n < 0) ? -n : n;
         return (n % 100 >= 11 && n % 100 <= 19) || n % 10 == 0 || n % 10 > 4 ? "ов" : n % 10 == 1 ? "" : "a";
     }
+    private static String modify(String date) {
+        String[] mas = date.split(" ");
+        Matcher matcher = Pattern.compile("0\\d").matcher(mas[0]);
+        if (matcher.find()) {
+            return date.substring(1);
+        } else {
+            return date;
+        }
+    }
     @SuppressLint("SimpleDateFormat")
     public static String getDate(String question) throws ParseException {
-        String date = "";
         Date tmp;
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM YYYY", dateFormatSymbols);
-
-        String tmpQuestion = question, result;
-        tmpQuestion = tmpQuestion.replace("праздник ", "");
+        String tmpQuestion = question.replace("праздник ", "");;
         String[] dates = tmpQuestion.split(",");
         for (int i = 0; i < dates.length; i++) {
             if (dates[i].contains("вчера")) {
@@ -109,6 +119,7 @@ class AI {
                     dates[i] = sdf.format(
                             Objects.requireNonNull(new SimpleDateFormat("dd.MM.yyyy").
                                     parse(dates[i].substring(matcher.start(), matcher.end()))));
+                    dates[i] = modify(dates[i]);
                 }
             }
         }
@@ -126,27 +137,54 @@ class AI {
     static void getAnswer(String question, final Consumer<String> callback) throws ParseException {
         question = question.toLowerCase();
 
+        if (question.contains("перевод")) {
+            final String number = question.replaceAll("[^0-9\\+]", "");
+            ConvertNumberToString.getConvertNumber(number, new Consumer<String>() {
+                @Override
+                public void accept(String s) {
+                    callback.accept(s);
+                }
+            });
+        }
+
         if (question.contains("праздник")) {
             String date = getDate(question);
-            new AsyncTask<String, Integer, String>() {
+            /*new AsyncTask<String, Integer, String>() {
                 @Override
                 protected String doInBackground(String... strings) {
-                    String result = null;
+                    String result = "";
                     for (String str : strings) {
                         try {
-                            result += str + ": " + ParsingHtmlService.getHolyday(str);
+                            result += " " + str + ": " + ParsingHtmlService.getHolyday(str) + "\n";
                         }
                         catch (IOException e) {
-                            return "Не могу ответь :(";
+                            result += " " + str + "Не могу ответь :(";
                         }
                     }
-                    return "";
+                    return result;
                 }
                 protected void onPostExecute(String res) {
                     super.onPostExecute(res);
                     callback.accept(res);
                 }
-            }.execute(date.split(","));
+            }.execute(date.split(","));*/
+
+            String[] strings = date.split(",");
+
+            Observable.fromCallable(() -> {
+                String result = "";
+                for (String str : strings) {
+                    try {
+                        result += " " + str + ": " + ParsingHtmlService.getHolyday(str) + "\n";
+                    } catch (IOException e) {
+                        result += " " + str + ": Не могу ответь :(";
+                    }
+                }
+                return result;
+            })
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe((result) -> { callback.accept(result); });
         }
 
         Pattern cityPattern = Pattern.compile("погода в городе (\\p{L}+)", Pattern.CASE_INSENSITIVE);

@@ -3,12 +3,13 @@ package com.example.voiceassistent;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class ForecastService {
-    public static ForecastApi getApi() {
+public class ConvertNumberService {
+    public static ConvertNumberApi getApi() {
+        GsonConverterFactory.create();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://api.weatherstack.com")
+                .baseUrl("https://htmlweb.ru")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        return retrofit.create(ForecastApi.class);
+        return retrofit.create(ConvertNumberApi.class);
     }
 }
