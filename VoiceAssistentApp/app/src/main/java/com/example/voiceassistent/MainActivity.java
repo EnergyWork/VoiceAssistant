@@ -12,6 +12,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.function.Consumer;
@@ -24,19 +26,24 @@ public class MainActivity extends AppCompatActivity {
     protected TextToSpeech textToSpeech;
     protected MessageListAdapter messageListAdapter;
 
-    protected void OnSend() {
+    protected void OnSend() throws ParseException, IOException {
         String question = questionField.getText().toString();
-        AI.getAnswer(question, new Consumer<String>() {
-            @Override
-            public void accept(String answer) {
-                messageListAdapter.messageList.add(new Message(question, true));
-                messageListAdapter.messageList.add(new Message(answer, false));
-                messageListAdapter.notifyDataSetChanged();
-                textToSpeech.speak(answer, TextToSpeech.QUEUE_FLUSH, null, null);
-                chatMessageList.scrollToPosition(messageListAdapter.messageList.size() - 1);
-                questionField.setText("");
-            }
-        });
+        try {
+            AI.getAnswer(question, new Consumer<String>() {
+                @Override
+                public void accept(String answer) {
+                    messageListAdapter.messageList.add(new Message(question, true));
+                    messageListAdapter.messageList.add(new Message(answer, false));
+                    messageListAdapter.notifyDataSetChanged();
+                    textToSpeech.speak(answer, TextToSpeech.QUEUE_FLUSH, null, null);
+                    chatMessageList.scrollToPosition(messageListAdapter.messageList.size() - 1);
+                    questionField.setText("");
+                }
+            });
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
@@ -55,7 +62,11 @@ public class MainActivity extends AppCompatActivity {
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                OnSend();
+                try {
+                    OnSend();
+                } catch (ParseException | IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
 

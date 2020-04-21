@@ -1,10 +1,17 @@
 package com.example.voiceassistent;
 
+import android.annotation.SuppressLint;
+import android.os.AsyncTask;
 import android.os.Build;
+import android.service.autofill.FieldClassification;
 
 import androidx.annotation.RequiresApi;
 
+import java.io.CharArrayReader;
+import java.io.IOException;
 import java.text.DateFormat;
+import java.text.DateFormatSymbols;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -14,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -70,17 +78,76 @@ class AI {
         n = (n < 0) ? -n : n;
         return (n % 100 >= 11 && n % 100 <= 19) || n % 10 == 0 || n % 10 > 4 ? "ов" : n % 10 == 1 ? "" : "a";
     }
+    @SuppressLint("SimpleDateFormat")
+    public static String getDate(String question) throws ParseException {
+        String date = "";
+        Date tmp;
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM YYYY", dateFormatSymbols);
 
+        String tmpQuestion = question, result;
+        tmpQuestion = tmpQuestion.replace("праздник ", "");
+        String[] dates = tmpQuestion.split(",");
+        for (int i = 0; i < dates.length; i++) {
+            if (dates[i].contains("вчера")) {
+                calendar.add(Calendar.DAY_OF_YEAR, - 1);
+                tmp = calendar.getTime();
+                dates[i] = sdf.format(tmp) + ",";
+                calendar.add(Calendar.DAY_OF_YEAR, + 1);
+            } else if (dates[i].contains("сегодня")) {
+                tmp = calendar.getTime();
+                dates[i] = sdf.format(tmp) + ",";
+            } else if (dates[i].contains("завтра")) {
+                calendar.add(Calendar.DAY_OF_YEAR, + 1);
+                tmp = calendar.getTime();
+                dates[i] = sdf.format(tmp);
+                calendar.add(Calendar.DAY_OF_YEAR, - 1);
+            } else {
+                String pattern = "\\d{1,2}\\.\\d{1,2}\\.\\d{4}";
+                Matcher matcher = Pattern.compile(pattern).matcher(dates[i]);
+                if (matcher.find()) {
+                    dates[i] = sdf.format(
+                            Objects.requireNonNull(new SimpleDateFormat("dd.MM.yyyy").
+                                    parse(dates[i].substring(matcher.start(), matcher.end()))));
+                }
+            }
+        }
+        return String.join(",", dates);
+    }
+    private static DateFormatSymbols dateFormatSymbols = new DateFormatSymbols() {
+        @Override
+        public String[] getMonths() {
+            return new String[]{"января", "февраля", "марта", "апреля", "мая", "июня",
+                    "июля", "августа", "сентября", "октября", "ноября", "декабря"};
+        }
+
+    };
     //@RequiresApi(api = Build.VERSION_CODES.N)
-    static void getAnswer(String question, final Consumer<String> callback) {
+    static void getAnswer(String question, final Consumer<String> callback) throws ParseException {
         question = question.toLowerCase();
 
-        //final List<String> ans = phrases.keySet()
-        //        .stream()
-        //        .filter(question::contains)
-        //        .map(t -> phrases.get(t))
-        //        .collect(Collectors.toList());
-        //Collections.reverse(ans);
+        if (question.contains("праздник")) {
+            String date = getDate(question);
+            new AsyncTask<String, Integer, String>() {
+                @Override
+                protected String doInBackground(String... strings) {
+                    String result = null;
+                    for (String str : strings) {
+                        try {
+                            result += str + ": " + ParsingHtmlService.getHolyday(str);
+                        }
+                        catch (IOException e) {
+                            return "Не могу ответь :(";
+                        }
+                    }
+                    return "";
+                }
+                protected void onPostExecute(String res) {
+                    super.onPostExecute(res);
+                    callback.accept(res);
+                }
+            }.execute(date.split(","));
+        }
 
         Pattern cityPattern = Pattern.compile("погода в городе (\\p{L}+)", Pattern.CASE_INSENSITIVE);
         Matcher matcher = cityPattern.matcher(question);
@@ -89,19 +156,14 @@ class AI {
             ForecastToString.getForecast(cityName, new Consumer<String>() {
                 @Override
                 public void accept(String s) {
-                    //ans.add(s);
-                    //callback.accept(String.join(", ", ans));
                     callback.accept(s);
                 }
             });
         }
         for(Map.Entry<String, String> item : phrases.entrySet()) {
             if (question.contains(item.getKey())) {
-                //ans.add(item.getValue());
                 callback.accept(item.getValue());
             }
         }
-        //callback.accept(String.join(", ", ans));
-        //callback.accept("Вопрос не поняла...");
     }
 }
