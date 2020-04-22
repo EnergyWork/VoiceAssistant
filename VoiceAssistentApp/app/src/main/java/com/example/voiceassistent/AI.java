@@ -136,12 +136,14 @@ class AI {
     //@RequiresApi(api = Build.VERSION_CODES.N)
     static void getAnswer(String question, final Consumer<String> callback) throws ParseException {
         question = question.toLowerCase();
+        //ArrayList<String> answers = new ArrayList<>();
 
         if (question.contains("перевод")) {
-            final String number = question.replaceAll("[^0-9\\+]", "");
+            final String number = question.replaceAll("[^0-9+]", "");
             ConvertNumberToString.getConvertNumber(number, new Consumer<String>() {
                 @Override
                 public void accept(String s) {
+                    //answers.add(s);
                     callback.accept(s);
                 }
             });
@@ -171,6 +173,7 @@ class AI {
 
             String[] strings = date.split(",");
 
+            //answers.add(result);
             Observable.fromCallable(() -> {
                 String result = "";
                 for (String str : strings) {
@@ -184,7 +187,7 @@ class AI {
             })
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe((result) -> { callback.accept(result); });
+            .subscribe(callback::accept);
         }
 
         Pattern cityPattern = Pattern.compile("погода в городе (\\p{L}+)", Pattern.CASE_INSENSITIVE);
@@ -194,14 +197,18 @@ class AI {
             ForecastToString.getForecast(cityName, new Consumer<String>() {
                 @Override
                 public void accept(String s) {
+                    //answers.add(s);
                     callback.accept(s);
                 }
             });
         }
+
         for(Map.Entry<String, String> item : phrases.entrySet()) {
             if (question.contains(item.getKey())) {
+                //answers.add(item.getValue());
                 callback.accept(item.getValue());
             }
         }
+        //callback.accept(String.join(";", answers));
     }
 }

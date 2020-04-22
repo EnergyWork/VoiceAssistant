@@ -34,9 +34,8 @@ public class ParsingHtmlService {
                         holidaysStr += holiday.text() + "; ";
                     }
                 }
-                return holidaysStr;
+                return holidaysStr == "" ? "Праздников нет" : holidaysStr;
             }
-            iter.next();
         }
         return "";
     }
