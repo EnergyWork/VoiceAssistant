@@ -2,29 +2,31 @@ package com.example.voiceassistent;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 import java.util.Objects;
 
 public class Message implements Parcelable {
     public String text;
     public Date date;
     public Boolean isSend;
-    private DateFormat dateFormat = new SimpleDateFormat("KK:mm", new Locale("rus"));
+    private DateFormat dateFormat = new SimpleDateFormat("HH:mm dd.MM.YYYY");
 
     public Message(String text, Boolean isSend) {
         this.text = text;
         this.isSend = isSend;
         this.date = new Date();
     }
+    public Message(MessageEntity message) throws ParseException {
+        this.text = message.text;
+        this.date = (new SimpleDateFormat("HH:mm dd.MM.YYYY")).parse(message.date);
+        this.isSend = (message.isSend == 1);
+    }
     protected Message(Parcel in) {
         text = in.readString();
-        byte tmpIsSend = in.readByte();
-        isSend = tmpIsSend == 1;
+        isSend = (in.readByte() == 1);
         try {
             date =  dateFormat.parse(Objects.requireNonNull(in.readString()));
         } catch (ParseException e) {

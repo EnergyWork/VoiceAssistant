@@ -1,4 +1,4 @@
-package com.example.voiceassistent;
+package com.example.voiceassistent.Forecast;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

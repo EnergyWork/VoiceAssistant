@@ -5,4 +5,6 @@
     <string name="user">Пользователь</string>
     <string name="UserImageDesc">Что-то</string>
     <string name="assistantName">Ассистент</string>
+    <string name="DayThemeType">Дневная тема</string>
+    <string name="NightThemeType">Ночная тема</string>
 </resources>

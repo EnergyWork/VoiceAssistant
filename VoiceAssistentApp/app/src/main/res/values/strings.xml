@@ -5,4 +5,6 @@
     <string name="user">User</string>
     <string name="UserImageDesc">Something</string>
     <string name="assistantName">Assistant</string>
+    <string name="DayThemeType">Light theme</string>
+    <string name="NightThemeType">Night theme</string>
 </resources>

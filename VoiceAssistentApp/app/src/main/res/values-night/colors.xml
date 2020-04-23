@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="assistantBubble">#701617</color>
+    <color name="userBubble">#007867</color>
+    <color name="colorPrimary">#003731</color>
+    <color name="colorPrimaryDark">#003029</color>
+    <color name="colorAccent">#fef4f8</color>
+</resources>

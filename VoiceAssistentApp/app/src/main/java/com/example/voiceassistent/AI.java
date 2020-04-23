@@ -1,37 +1,26 @@
 package com.example.voiceassistent;
+import com.example.voiceassistent.ConvertNumber.ConvertNumberToString;
+import com.example.voiceassistent.Forecast.ForecastToString;
 
-import android.annotation.SuppressLint;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.service.autofill.FieldClassification;
-
-import androidx.annotation.RequiresApi;
-
-import java.io.CharArrayReader;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-class AI {
+public class AI {
     public static Map<String, String> phrases = new HashMap<String, String>() {{
         put("привет", "Привет!");
         put("как дела", "Всё отлично, как сам?");
@@ -91,7 +80,6 @@ class AI {
             return date;
         }
     }
-    @SuppressLint("SimpleDateFormat")
     public static String getDate(String question) throws ParseException {
         Date tmp;
         Calendar calendar = Calendar.getInstance();
@@ -140,13 +128,7 @@ class AI {
 
         if (question.contains("перевод")) {
             final String number = question.replaceAll("[^0-9+]", "");
-            ConvertNumberToString.getConvertNumber(number, new Consumer<String>() {
-                @Override
-                public void accept(String s) {
-                    //answers.add(s);
-                    callback.accept(s);
-                }
-            });
+            ConvertNumberToString.getConvertNumber(number, callback);
         }
 
         if (question.contains("праздник")) {
@@ -172,8 +154,6 @@ class AI {
             }.execute(date.split(","));*/
 
             String[] strings = date.split(",");
-
-            //answers.add(result);
             Observable.fromCallable(() -> {
                 String result = "";
                 for (String str : strings) {
@@ -194,21 +174,15 @@ class AI {
         Matcher matcher = cityPattern.matcher(question);
         if (matcher.find()) {
             String cityName = matcher.group(1);
-            ForecastToString.getForecast(cityName, new Consumer<String>() {
-                @Override
-                public void accept(String s) {
-                    //answers.add(s);
-                    callback.accept(s);
-                }
+            ForecastToString.getForecast(cityName, s -> {
+                callback.accept(s);
             });
         }
 
         for(Map.Entry<String, String> item : phrases.entrySet()) {
             if (question.contains(item.getKey())) {
-                //answers.add(item.getValue());
                 callback.accept(item.getValue());
             }
         }
-        //callback.accept(String.join(";", answers));
     }
 }

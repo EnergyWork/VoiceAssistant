@@ -1,4 +1,4 @@
-package com.example.voiceassistent;
+package com.example.voiceassistent.Forecast;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

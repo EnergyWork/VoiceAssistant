@@ -1,8 +1,10 @@
-package com.example.voiceassistent;
+package com.example.voiceassistent.Forecast;
 
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+
+import com.example.voiceassistent.AI;
 
 import java.util.function.Consumer;
 
